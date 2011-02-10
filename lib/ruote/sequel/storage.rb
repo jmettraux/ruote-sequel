@@ -30,18 +30,14 @@ require 'ruote/sequel/version'
 module Ruote
 module Sequel
 
+  # Creates the 'documents' table necessary for this storage.
+  #
+  # If re_create is set to true, it will destroy any previous 'documents'
+  # table and create it.
+  #
+  def self.create_table(sequel, re_create=false)
 
-  #property :ide, String, :key => true, :length => 255, :required => true
-  #property :rev, Integer, :key => true, :required => true
-  #property :typ, String, :key => true, :required => true
-  #property :doc, Text, :length => 2**32 - 1, :required => true, :lazy => false
-
-  #property :wfid, String, :index => true
-  #property :participant_name, String, :length => 512
-
-  def self.create_table(sequel, opts={})
-
-    m = opts[:re_create] ? :create_table! : :create_table
+    m = re_create ? :create_table! : :create_table
 
     sequel.send(m, :documents) do
       String :ide, :size => 255, :null => false
@@ -49,18 +45,36 @@ module Sequel
       String :typ, :size => 55, :null => false
       String :doc, :text => true, :null => false
       String :wfid, :size => 255, :index => true
-      String :participant_name, :size => 512 # INDEX !
+      String :participant_name, :size => 512
       primary_key [ :ide, :rev, :typ ]
     end
   end
 
   #
-  # TODO
+  # A Sequel storage implementation for ruote >= 2.2.0.
+  #
+  #   require 'rubygems'
+  #   require 'json' # gem install json
+  #   require 'ruote'
+  #   require 'ruote-sequel' # gem install ruote-sequel
+  #
+  #   sequel = Sequel.connect('postgres://localhost/ruote_test')
+  #   #sequel = Sequel.connect('mysql://root:root@localhost/ruote_test')
+  #
+  #   opts = { 'remote_definition_allowed' => true }
+  #
+  #   engine = Ruote::Engine.new(
+  #     Ruote::Worker.new(
+  #       Ruote::Sequel::Storage.new(sequel, opts)))
+  #
+  #   # ...
   #
   class Storage
 
     include Ruote::StorageBase
 
+    # The underlying Sequel::Database instance
+    #
     attr_reader :sequel
 
     def initialize(sequel, options={})
