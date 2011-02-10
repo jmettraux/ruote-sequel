@@ -1,0 +1,6 @@
+
+= ruote-sequel - CHANGELOG.txt
+
+
+== ruote-sequel 2.2.0    not yet released
+

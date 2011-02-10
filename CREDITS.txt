@@ -1,0 +1,15 @@
+
+= ruote-sequel CREDITS.txt
+
+== authors
+
+- John Mettraux - http://github.com/jmettraux
+
+
+== contributors
+
+
+== many thanks to
+
+- Jeremy Evans and all the Sequel community
+
