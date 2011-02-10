@@ -179,6 +179,9 @@ module Sequel
       keys && keys.first.is_a?(Regexp) ?
         docs.select { |doc| keys.find { |key| key.match(doc['_id']) } } :
         docs
+
+      # (pass on the dataset.filter(:wfid => /regexp/) for now
+      # since we have potentially multiple keys)
     end
 
     # Returns all the ids of the documents of a given type.
@@ -230,11 +233,10 @@ module Sequel
 
       raise NotImplementedError if type != 'workitems'
 
-      query = {
-        :typ => type, :participant_name => participant_name
-      }.merge(opts)
+      docs = @sequel[:documents].where(
+        :typ => type, :participant_name => participant_name)
 
-      select_last_revs(Document.all(query)).collect { |d| d.to_h }
+      select_last_revs(docs).collect { |d| Rufus::Json.decode(d[:doc]) }
     end
 
     # Querying workitems by field (warning, goes deep into the JSON structure)
@@ -243,44 +245,41 @@ module Sequel
 
       raise NotImplementedError if type != 'workitems'
 
-      like = [ '%"', field, '":' ]
-      like.push(Rufus::Json.encode(value)) if value
-      like.push('%')
+      lk = [ '%"', field, '":' ]
+      lk.push(Rufus::Json.encode(value)) if value
+      lk.push('%')
 
-      select_last_revs(
-        Document.all(:typ => type, :doc.like => like.join)
-      ).collect { |d| d.to_h }
+      docs = @sequel[:documents].where(:typ => type).filter(:doc.like(lk.join))
+
+      select_last_revs(docs).collect { |d| Rufus::Json.decode(d[:doc]) }
     end
 
     def query_workitems(criteria)
 
-      cr = { :typ => 'workitems' }
+      ds = @sequel[:documents].where(:typ => 'workitems')
 
-      return select_last_revs(Document.all(cr)).size if criteria['count']
+      return select_last_revs(ds.all).size if criteria['count']
 
-      offset = criteria.delete('offset')
       limit = criteria.delete('limit')
+      offset = criteria.delete('offset')
+
+      ds = ds.limit(limit, offset)
 
       wfid =
         criteria.delete('wfid')
       pname =
         criteria.delete('participant_name') || criteria.delete('participant')
 
-      cr[:ide.like] = "%!#{wfid}" if wfid
-      cr[:offset] = offset if offset
-      cr[:limit] = limit if limit
-      cr[:participant_name] = pname if pname
+      ds = ds.filter(:ide.like("%!#{wfid}")) if wfid
+      ds = ds.filter(:participant_name => pname) if pname
 
-      likes = criteria.collect do |k, v|
-        "%\"#{k}\":#{Rufus::Json.encode(v)}%"
+      criteria.collect do |k, v|
+        ds = ds.filter(:doc.like("%\"#{k}\":#{Rufus::Json.encode(v)}%"))
       end
-      cr[:conditions] = [
-        ([ 'doc LIKE ?' ] * likes.size).join(' AND '), *likes
-      ] unless likes.empty?
 
-      select_last_revs(
-        Document.all(cr)
-      ).collect { |d| Ruote::Workitem.new(d.to_h) }
+      select_last_revs(ds.all).collect { |d|
+        Ruote::Workitem.new(Rufus::Json.decode(d[:doc]))
+      }
     end
 
     protected
