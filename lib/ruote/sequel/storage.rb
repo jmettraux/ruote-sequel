@@ -195,9 +195,12 @@ module Sequel
     #
     def purge!
 
-      @sequel[:documents].delete_sql
+      @sequel[:documents].delete
     end
 
+    # Returns a string representation the current content of the storage for
+    # a given type.
+    #
     def dump(type)
 
       "=== #{type} ===\n" +
@@ -208,6 +211,14 @@ module Sequel
     # all the idle connections in the pool (not the active ones).
     #
     def shutdown
+
+      @sequel.disconnect
+    end
+
+    # Grrr... I should sort the mess between close and shutdown...
+    # Tests vs production :-(
+    #
+    def close
 
       @sequel.disconnect
     end
