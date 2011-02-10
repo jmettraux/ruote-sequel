@@ -11,26 +11,29 @@ Rufus::Json.detect_backend
 
 require 'ruote-sequel'
 
-$sequel = Sequel.connect('postgres://localhost/ruote_test')
-#sequel = Sequel.connect('mysql://root:root@localhost/ruote_test')
+unless $sequel
 
-Ruote::Sequel.create_table($sequel, true)
-  # true forces re_create of 'documents' table
+  $sequel = Sequel.connect('postgres://localhost/ruote_test')
+  #$sequel = Sequel.connect('mysql://root:root@localhost/ruote_test')
 
-require 'logger'
+  Ruote::Sequel.create_table($sequel, true)
+    # true forces re_create of 'documents' table
 
-logger = nil
+  require 'logger'
 
-if ARGV.include?('-l') || ARGV.include?('--l')
-  FileUtils.rm('debug.log') rescue nil
-  logger = Logger.new('debug.log')
-elsif ARGV.include?('-ls') || ARGV.include?('--ls')
-  logger = Logger.new($stdout)
-end
+  logger = nil
 
-if logger
-  logger.level = Logger::DEBUG
-  $sequel.loggers << logger
+  if ARGV.include?('-l') || ARGV.include?('--l')
+    FileUtils.rm('debug.log') rescue nil
+    logger = Logger.new('debug.log')
+  elsif ARGV.include?('-ls') || ARGV.include?('--ls')
+    logger = Logger.new($stdout)
+  end
+
+  if logger
+    logger.level = Logger::DEBUG
+    $sequel.loggers << logger
+  end
 end
 
 
