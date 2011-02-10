@@ -39,11 +39,13 @@ module Sequel
   #property :wfid, String, :index => true
   #property :participant_name, String, :length => 512
 
-  def self.create_table!(sequel)
+  def self.create_table(sequel, opts={})
 
-    sequel.create_table!(:documents) do
+    m = opts[:re_create] ? :create_table! : :create_table
+
+    sequel.send(m, :documents) do
       String :ide, :size => 255, :null => false
-      Fixnum :rev, :null => false
+      String :rev, :null => false
       String :typ, :size => 55, :null => false
       String :doc, :text => true, :null => false
       String :wfid, :size => 255, :index => true
@@ -73,7 +75,7 @@ module Sequel
 
       # put_msg is a unique action, no need for all the complexity of put
 
-      insert(prepare_msg_doc(action, options), 1)
+      do_insert(prepare_msg_doc(action, options), '1')
 
       nil
     end
@@ -86,43 +88,39 @@ module Sequel
 
       return nil unless doc
 
-      insert(doc, 1)
+      do_insert(doc, '1')
 
       doc['_id']
     end
 
     def put(doc, opts={})
 
-      current = do_get(doc['type'], doc['_id'])
+      rev = doc['_rev']
 
-      rev = doc['_rev'].to_i
+      if rev
 
-      return true if current.nil? && rev > 0
-      return Rufus::Json.decode(current[:doc]) if current && rev != current[:rev]
+        count = do_delete(doc)
 
-      nrev = rev + 1
+        return (get(doc['type'], doc['_id']) || true) if count != 1
+          # failure
+      end
+
+      nrev = (rev.to_i + 1).to_s
 
       begin
 
-        insert(doc, nrev)
-
-        @sequel[:documents].where(
-          :ide => current[:ide], :typ => current[:typ], :rev => current[:rev]
-        ).delete if current
-
-        doc['_rev'] = nrev if opts[:update_rev]
-
-        return nil # success
+        do_insert(doc, nrev)
 
       rescue ::Sequel::DatabaseError => de
-        #
-        # insertion failed, conflict
-        #
+
+        return (get(doc['type'], doc['_id']) || true)
+          # failure
       end
 
-      # have to return the current doc or true if there is no current doc
+      doc['_rev'] = nrev if opts[:update_rev]
 
-      get(doc['type'], doc['_id']) || true
+      nil
+        # success
     end
 
     def get(type, key)
@@ -136,35 +134,31 @@ module Sequel
 
       raise ArgumentError.new('no _rev for doc') unless doc['_rev']
 
-      r = put(doc)
+      count = do_delete(doc)
 
-      return true if r != nil
+      return (get(doc['type'], doc['_id']) || true) if count != 1
+        # failure
 
-      r = @sequel[:documents].where(
-        :typ => doc['type'], :ide => doc['_id']
-      ).delete
-
-      r == 1 ? nil : true
+      nil
+        #success
     end
 
     def get_many(type, key=nil, opts={})
 
-      q = { :typ => type }
-
-      if l = opts[:limit]; q[:limit] = l; end
-      if s = opts[:skip]; q[:offset] = s; end
+      ds = @sequel[:documents].where(:typ => type)
 
       keys = key ? Array(key) : nil
-      q[:wfid] = keys if keys && keys.first.is_a?(String)
+      ds = ds.filter(:wfid => keys) if keys && keys.first.is_a?(String)
 
-      q[:order] = (
-        opts[:descending] ? [ :ide.desc, :rev.desc ] : [ :ide.asc, :rev.asc ]
-      ) unless opts[:count]
+      return ds.all.size if opts[:count]
 
-      return select_last_revs(Document.all(q)).size if opts[:count]
+      ds = ds.order(
+        *(opts[:descending] ? [ :ide.desc, :rev.desc ] : [ :ide.asc, :rev.asc ])
+      )
 
-      #docs = Document.all(q)
-      docs = @sequel[:documents].all
+      ds = ds.limit(opts[:limit], opts[:skip])
+
+      docs = ds.all
       docs = select_last_revs(docs, opts[:descending])
       docs = docs.collect { |d| Rufus::Json.decode(d[:doc]) }
 
@@ -173,14 +167,18 @@ module Sequel
         docs
     end
 
+    # Returns all the ids of the documents of a given type.
+    #
     def ids(type)
 
       @sequel[:documents].where(:typ => type).collect { |d| d[:ide] }.uniq.sort
     end
 
+    # Nukes all the documents in this storage.
+    #
     def purge!
 
-      @sequel[:documents].all.delete
+      @sequel[:documents].delete_sql
     end
 
     def dump(type)
@@ -189,9 +187,12 @@ module Sequel
       get_many(type).map { |h| "  #{h['_id']} => #{h.inspect}" }.join("\n")
     end
 
+    # Calls #disconnect on the db. According to Sequel's doc, it closes
+    # all the idle connections in the pool (not the active ones).
+    #
     def shutdown
 
-      #@dbs.values.each { |db| db.shutdown }
+      @sequel.disconnect
     end
 
     # Mainly used by ruote's test/unit/ut_17_storage.rb
@@ -270,9 +271,15 @@ module Sequel
 
     protected
 
-    def insert(doc, rev)
+    def do_delete(doc)
 
-      #@sequel.transaction(:isolation => :serializable) do
+      @sequel[:documents].where(
+        :ide => doc['_id'], :typ => doc['type'], :rev => doc['_rev']
+      ).delete
+    end
+
+    def do_insert(doc, rev)
+
       @sequel[:documents].insert(
         :ide => doc['_id'],
         :rev => rev,
@@ -283,7 +290,6 @@ module Sequel
         :wfid => extract_wfid(doc),
         :participant_name => doc['participant_name']
       )
-      #end
     end
 
     def extract_wfid(doc)
