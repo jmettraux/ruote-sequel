@@ -109,17 +109,16 @@ module Sequel
 
     def put(doc, opts={})
 
-      rev = doc['_rev']
+      if doc['_rev']
 
-      if rev
+        d = get(doc['type'], doc['_id'])
 
-        count = do_delete(doc)
-
-        return (get(doc['type'], doc['_id']) || true) if count != 1
-          # failure
+        return true unless d
+        return d if d['_rev'] != doc['_rev']
+          # failures
       end
 
-      nrev = (rev.to_i + 1).to_s
+      nrev = (doc['_rev'].to_i + 1).to_s
 
       begin
 
@@ -130,6 +129,10 @@ module Sequel
         return (get(doc['type'], doc['_id']) || true)
           # failure
       end
+
+      @sequel[:documents].where(
+        :typ => doc['type'], :ide => doc['_id']
+      ).filter { rev < nrev }.delete
 
       doc['_rev'] = nrev if opts[:update_rev]
 
@@ -154,7 +157,7 @@ module Sequel
         # failure
 
       nil
-        #success
+        # success
     end
 
     def get_many(type, key=nil, opts={})
