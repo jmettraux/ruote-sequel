@@ -89,7 +89,7 @@ module Sequel
 
       # put_msg is a unique action, no need for all the complexity of put
 
-      do_insert(prepare_msg_doc(action, options), '1')
+      do_insert(prepare_msg_doc(action, options), 1)
 
       nil
     end
@@ -102,7 +102,7 @@ module Sequel
 
       return nil unless doc
 
-      do_insert(doc, '1')
+      do_insert(doc, 1)
 
       doc['_id']
     end
