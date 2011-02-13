@@ -41,7 +41,7 @@ module Sequel
 
     sequel.send(m, :documents) do
       String :ide, :size => 255, :null => false
-      String :rev, :null => false
+      Integer :rev, :null => false
       String :typ, :size => 55, :null => false
       String :doc, :text => true, :null => false
       String :wfid, :size => 255, :index => true
@@ -118,7 +118,7 @@ module Sequel
           # failures
       end
 
-      nrev = (doc['_rev'].to_i + 1).to_s
+      nrev = doc['_rev'].to_i + 1
 
       begin
 
@@ -301,7 +301,7 @@ module Sequel
     def do_delete(doc)
 
       @sequel[:documents].where(
-        :ide => doc['_id'], :typ => doc['type'], :rev => doc['_rev']
+        :ide => doc['_id'], :typ => doc['type'], :rev => doc['_rev'].to_i
       ).delete
     end
 
