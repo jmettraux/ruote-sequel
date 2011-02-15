@@ -3,7 +3,7 @@
 Gem::Specification.new do |s|
 
   s.name = 'ruote-dm'
-  s.version = File.read('lib/ruote/dm/version.rb').match(/VERSION = '([^']+)'/)[1]
+  s.version = File.read('lib/ruote/sequel/version.rb').match(/VERSION = '([^']+)'/)[1]
   s.platform = Gem::Platform::RUBY
   s.authors = [ 'John Mettraux' ]
   s.email = [ 'jmettraux@gmail.com' ]
@@ -26,6 +26,7 @@ Sequel storage for ruote (a workflow engine)
 
   s.add_development_dependency 'rake'
   s.add_development_dependency 'pg', '0.10.1'
+  s.add_development_dependency 'mysql', '2.8.1'
 
   s.require_path = 'lib'
 end
