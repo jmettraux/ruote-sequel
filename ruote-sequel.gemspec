@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
 
-  s.name = 'ruote-dm'
+  s.name = 'ruote-sequel'
   s.version = File.read('lib/ruote/sequel/version.rb').match(/VERSION = '([^']+)'/)[1]
   s.platform = Gem::Platform::RUBY
   s.authors = [ 'John Mettraux' ]
