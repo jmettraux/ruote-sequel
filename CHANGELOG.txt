@@ -2,5 +2,7 @@
 = ruote-sequel - CHANGELOG.txt
 
 
-== ruote-sequel 2.2.0    not yet released
+== ruote-sequel 2.2.0    released 2011/03/01
+
+- initial release
 
