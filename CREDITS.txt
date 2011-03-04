@@ -1,15 +1,18 @@
 
 = ruote-sequel CREDITS.txt
 
+
 == authors
 
 - John Mettraux - http://github.com/jmettraux
 
 
-== contributors
+== feedback
+
+- Eric Smith ('table_name')
 
 
 == many thanks to
 
-- Jeremy Evans and all the Sequel community
+- Jeremy Evans and the Sequel community
 

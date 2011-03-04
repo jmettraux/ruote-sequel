@@ -39,6 +39,14 @@ To learn more about connecting Sequel to a database :
 
 http://sequel.rubyforge.org/rdoc/files/doc/opening_databases_rdoc.html
 
+A single 'documents' table is used. To change this name :
+
+  opts = { 'table_name' => 'ruote_docs' }
+  
+  engine = Ruote::Engine.new(
+    Ruote::Worker.new(
+      Ruote::Sequel::Storage.new(sequel, opts)))
+
 
 == running tests
 

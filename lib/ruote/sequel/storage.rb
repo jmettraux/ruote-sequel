@@ -35,11 +35,11 @@ module Sequel
   # If re_create is set to true, it will destroy any previous 'documents'
   # table and create it.
   #
-  def self.create_table(sequel, re_create=false)
+  def self.create_table(sequel, re_create=false, table_name=:documents)
 
     m = re_create ? :create_table! : :create_table
 
-    sequel.send(m, :documents) do
+    sequel.send(m, table_name.to_sym) do
       String :ide, :size => 255, :null => false
       Integer :rev, :null => false
       String :typ, :size => 55, :null => false
@@ -81,6 +81,7 @@ module Sequel
 
       @sequel = sequel
       @options = options
+      @table = (options['sequel_table_name'] || :documents).to_sym
 
       put_configuration
     end
@@ -130,7 +131,7 @@ module Sequel
           # failure
       end
 
-      @sequel[:documents].where(
+      @sequel[@table].where(
         :typ => doc['type'], :ide => doc['_id']
       ).filter { rev < nrev }.delete
 
@@ -162,7 +163,7 @@ module Sequel
 
     def get_many(type, key=nil, opts={})
 
-      ds = @sequel[:documents].where(:typ => type)
+      ds = @sequel[@table].where(:typ => type)
 
       keys = key ? Array(key) : nil
       ds = ds.filter(:wfid => keys) if keys && keys.first.is_a?(String)
@@ -191,14 +192,14 @@ module Sequel
     #
     def ids(type)
 
-      @sequel[:documents].where(:typ => type).collect { |d| d[:ide] }.uniq.sort
+      @sequel[@table].where(:typ => type).collect { |d| d[:ide] }.uniq.sort
     end
 
     # Nukes all the documents in this storage.
     #
     def purge!
 
-      @sequel[:documents].delete
+      @sequel[@table].delete
     end
 
     # Returns a string representation the current content of the storage for
@@ -237,7 +238,7 @@ module Sequel
     #
     def purge_type!(type)
 
-      @sequel[:documents].where(:typ => type).delete
+      @sequel[@table].where(:typ => type).delete
     end
 
     # A provision made for workitems, allow to query them directly by
@@ -247,7 +248,7 @@ module Sequel
 
       raise NotImplementedError if type != 'workitems'
 
-      docs = @sequel[:documents].where(
+      docs = @sequel[@table].where(
         :typ => type, :participant_name => participant_name)
 
       select_last_revs(docs).collect { |d| Rufus::Json.decode(d[:doc]) }
@@ -263,14 +264,14 @@ module Sequel
       lk.push(Rufus::Json.encode(value)) if value
       lk.push('%')
 
-      docs = @sequel[:documents].where(:typ => type).filter(:doc.like(lk.join))
+      docs = @sequel[@table].where(:typ => type).filter(:doc.like(lk.join))
 
       select_last_revs(docs).collect { |d| Rufus::Json.decode(d[:doc]) }
     end
 
     def query_workitems(criteria)
 
-      ds = @sequel[:documents].where(:typ => 'workitems')
+      ds = @sequel[@table].where(:typ => 'workitems')
 
       return select_last_revs(ds.all).size if criteria['count']
 
@@ -300,14 +301,14 @@ module Sequel
 
     def do_delete(doc)
 
-      @sequel[:documents].where(
+      @sequel[@table].where(
         :ide => doc['_id'], :typ => doc['type'], :rev => doc['_rev'].to_i
       ).delete
     end
 
     def do_insert(doc, rev)
 
-      @sequel[:documents].insert(
+      @sequel[@table].insert(
         :ide => doc['_id'],
         :rev => rev,
         :typ => doc['type'],
@@ -326,7 +327,7 @@ module Sequel
 
     def do_get(type, key)
 
-      @sequel[:documents].where(
+      @sequel[@table].where(
         :typ => type, :ide => key
       ).reverse_order(:rev).first
     end
