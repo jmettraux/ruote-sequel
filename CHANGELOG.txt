@@ -4,6 +4,7 @@
 
 == ruote-sequel 2.2.1    not yet released
 
+- query_workitems didn't recognize :skip option (Thanks Eric Smith)
 - 'table_name' option for specifying something other than 'documents'
 
 

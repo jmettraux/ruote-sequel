@@ -9,7 +9,7 @@
 
 == feedback
 
-- Eric Smith ('table_name')
+- Eric Smith - issue reporting
 
 
 == many thanks to

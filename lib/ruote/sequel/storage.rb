@@ -276,7 +276,7 @@ module Sequel
       return select_last_revs(ds.all).size if criteria['count']
 
       limit = criteria.delete('limit')
-      offset = criteria.delete('offset')
+      offset = criteria.delete('offset') || criteria.delete('skip')
 
       ds = ds.limit(limit, offset)
 
