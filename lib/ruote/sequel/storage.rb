@@ -251,12 +251,16 @@ module Sequel
       docs = @sequel[@table].where(
         :typ => type, :participant_name => participant_name)
 
-      select_last_revs(docs).collect { |d| Rufus::Json.decode(d[:doc]) }
+      docs = select_last_revs(docs)
+
+      opts[:count] ?
+        docs.size :
+        docs.collect { |d| Rufus::Json.decode(d[:doc]) }
     end
 
     # Querying workitems by field (warning, goes deep into the JSON structure)
     #
-    def by_field(type, field, value=nil)
+    def by_field(type, field, value, opts)
 
       raise NotImplementedError if type != 'workitems'
 
@@ -265,15 +269,16 @@ module Sequel
       lk.push('%')
 
       docs = @sequel[@table].where(:typ => type).filter(:doc.like(lk.join))
+      docs = select_last_revs(docs)
 
-      select_last_revs(docs).collect { |d| Rufus::Json.decode(d[:doc]) }
+      opts[:count] ? docs.size : docs.map { |d| Rufus::Json.decode(d[:doc]) }
     end
 
     def query_workitems(criteria)
 
       ds = @sequel[@table].where(:typ => 'workitems')
 
-      return select_last_revs(ds.all).size if criteria['count']
+      count = criteria.delete('count')
 
       limit = criteria.delete('limit')
       offset = criteria.delete('offset') || criteria.delete('skip')
@@ -292,9 +297,11 @@ module Sequel
         ds = ds.filter(:doc.like("%\"#{k}\":#{Rufus::Json.encode(v)}%"))
       end
 
-      select_last_revs(ds.all).collect { |d|
-        Ruote::Workitem.new(Rufus::Json.decode(d[:doc]))
-      }
+      ds = select_last_revs(ds.all)
+
+      count ?
+        ds.size :
+        ds.collect { |d| Ruote::Workitem.new(Rufus::Json.decode(d[:doc])) }
     end
 
     protected
