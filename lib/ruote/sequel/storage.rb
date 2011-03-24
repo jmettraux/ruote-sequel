@@ -154,7 +154,7 @@ module Sequel
 
       count = do_delete(doc)
 
-      return (get(doc['type'], doc['_id']) || true) if count != 1
+      return (get(doc['type'], doc['_id']) || true) if count < 1
         # failure
 
       nil
