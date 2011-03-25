@@ -4,6 +4,7 @@
 
 == ruote-sequel 2.2.1    not yet released
 
+- StorageParticipant#by_participant :limit fix (Thanks Jan Topiński)
 - #delete : doc count > 1 is OK
 - StorageParticipant :count => true made consistent (Thanks Jan Topiński)
 - query_workitems didn't recognize :skip option (Thanks Eric Smith)

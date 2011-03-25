@@ -249,7 +249,10 @@ module Sequel
       raise NotImplementedError if type != 'workitems'
 
       docs = @sequel[@table].where(
-        :typ => type, :participant_name => participant_name)
+        :typ => type, :participant_name => participant_name
+      ).limit(
+        opts[:limit], opts[:offset] || opts[:skip]
+      )
 
       docs = select_last_revs(docs)
 
