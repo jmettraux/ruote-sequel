@@ -258,7 +258,7 @@ module Sequel
 
       opts[:count] ?
         docs.size :
-        docs.collect { |d| Rufus::Json.decode(d[:doc]) }
+        docs.collect { |d| Ruote::Workitem.from_json(d[:doc]) }
     end
 
     # Querying workitems by field (warning, goes deep into the JSON structure)
@@ -272,9 +272,12 @@ module Sequel
       lk.push('%')
 
       docs = @sequel[@table].where(:typ => type).filter(:doc.like(lk.join))
+      docs = docs.limit(opts[:limit], opts[:skip] || opts[:offset])
       docs = select_last_revs(docs)
 
-      opts[:count] ? docs.size : docs.map { |d| Rufus::Json.decode(d[:doc]) }
+      opts[:count] ?
+        docs.size :
+        docs.map { |d| Ruote::Workitem.from_json(d[:doc]) }
     end
 
     def query_workitems(criteria)
