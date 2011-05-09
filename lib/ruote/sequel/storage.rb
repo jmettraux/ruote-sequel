@@ -256,14 +256,12 @@ module Sequel
 
       docs = select_last_revs(docs)
 
-      opts[:count] ?
-        docs.size :
-        docs.collect { |d| Ruote::Workitem.from_json(d[:doc]) }
+      opts[:count] ? docs.size : docs.map { |d| Rufus::Json.decode(d[:doc]) }
     end
 
     # Querying workitems by field (warning, goes deep into the JSON structure)
     #
-    def by_field(type, field, value, opts)
+    def by_field(type, field, value, opts={})
 
       raise NotImplementedError if type != 'workitems'
 
@@ -275,9 +273,7 @@ module Sequel
       docs = docs.limit(opts[:limit], opts[:skip] || opts[:offset])
       docs = select_last_revs(docs)
 
-      opts[:count] ?
-        docs.size :
-        docs.map { |d| Ruote::Workitem.from_json(d[:doc]) }
+      opts[:count] ? docs.size : docs.map { |d| Rufus::Json.decode(d[:doc]) }
     end
 
     def query_workitems(criteria)
@@ -307,7 +303,7 @@ module Sequel
 
       count ?
         ds.size :
-        ds.collect { |d| Ruote::Workitem.new(Rufus::Json.decode(d[:doc])) }
+        ds.collect { |d| Ruote::Workitem.from_json(d[:doc]) }
     end
 
     protected
