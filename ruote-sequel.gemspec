@@ -1,9 +1,13 @@
 # encoding: utf-8
 
+require File.join(File.dirname(__FILE__), 'lib/ruote/sequel/version')
+  # bundler wants absolute path
+
+
 Gem::Specification.new do |s|
 
   s.name = 'ruote-sequel'
-  s.version = File.read('lib/ruote/sequel/version.rb').match(/VERSION = '([^']+)'/)[1]
+  s.version = Ruote::Sequel::VERSION
   s.platform = Gem::Platform::RUBY
   s.authors = [ 'John Mettraux' ]
   s.email = [ 'jmettraux@gmail.com' ]
