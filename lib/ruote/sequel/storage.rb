@@ -244,7 +244,7 @@ module Sequel
     # A provision made for workitems, allow to query them directly by
     # participant name.
     #
-    def by_participant(type, participant_name, opts)
+    def by_participant(type, participant_name, opts={})
 
       raise NotImplementedError if type != 'workitems'
 
