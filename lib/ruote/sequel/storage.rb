@@ -152,7 +152,9 @@ module Sequel
 
       raise ArgumentError.new('no _rev for doc') unless doc['_rev']
 
-      count = do_delete(doc)
+      count = @sequel[@table].where(
+        :ide => doc['_id'], :typ => doc['type'], :rev => doc['_rev'].to_i
+      ).delete
 
       return (get(doc['type'], doc['_id']) || true) if count < 1
         # failure
@@ -172,9 +174,9 @@ module Sequel
 
       ds = ds.order(
         *(opts[:descending] ? [ :ide.desc, :rev.desc ] : [ :ide.asc, :rev.asc ])
+      ).limit(
+        opts[:limit], opts[:skip]
       )
-
-      ds = ds.limit(opts[:limit], opts[:skip])
 
       docs = ds.all
       docs = select_last_revs(docs, opts[:descending])
@@ -250,6 +252,8 @@ module Sequel
 
       docs = @sequel[@table].where(
         :typ => type, :participant_name => participant_name
+      ).order(
+        :ide.asc, :rev.asc
       ).limit(
         opts[:limit], opts[:offset] || opts[:skip]
       )
@@ -270,8 +274,14 @@ module Sequel
       lk.push(Rufus::Json.encode(value)) if value
       lk.push('%')
 
-      docs = @sequel[@table].where(:typ => type).filter(:doc.like(lk.join))
-      docs = docs.limit(opts[:limit], opts[:skip] || opts[:offset])
+      docs = @sequel[@table].where(
+        :typ => type
+      ).filter(
+        :doc.like(lk.join)
+      ).order(
+        :ide.asc, :rev.asc
+      ).limit(opts[:limit], opts[:skip] || opts[:offset])
+
       docs = select_last_revs(docs)
 
       opts[:count] ?
@@ -307,13 +317,6 @@ module Sequel
     end
 
     protected
-
-    def do_delete(doc)
-
-      @sequel[@table].where(
-        :ide => doc['_id'], :typ => doc['type'], :rev => doc['_rev'].to_i
-      ).delete
-    end
 
     def do_insert(doc, rev)
 

@@ -14,7 +14,9 @@ require 'ruote-sequel'
 unless $sequel
 
   $sequel = Sequel.connect('postgres://localhost/ruote_test')
+
   #$sequel = Sequel.connect('mysql://root:root@localhost/ruote_test')
+  #$sequel = Sequel.connect('mysql://root@localhost/ruote_test')
 
   Ruote::Sequel.create_table($sequel, true)
     # true forces re_create of 'documents' table
