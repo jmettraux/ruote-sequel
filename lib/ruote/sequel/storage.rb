@@ -80,10 +80,10 @@ module Sequel
     def initialize(sequel, options={})
 
       @sequel = sequel
-      @options = options
+      #@options = options
       @table = (options['sequel_table_name'] || :documents).to_sym
 
-      put_configuration
+      replace_engine_configuration(options)
     end
 
     def put_msg(action, options)
@@ -342,18 +342,6 @@ module Sequel
       @sequel[@table].where(
         :typ => type, :ide => key
       ).reverse_order(:rev).first
-    end
-
-    # Don't put configuration if it's already in
-    #
-    # (avoid storages from trashing configuration...)
-    #
-    def put_configuration
-
-      return if get('configurations', 'engine')
-
-      conf = { '_id' => 'engine', 'type' => 'configurations' }.merge(@options)
-      put(conf)
     end
 
     def select_last_revs(docs, reverse=false)

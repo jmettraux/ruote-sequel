@@ -39,7 +39,7 @@ unless $sequel
 end
 
 
-def new_storage (opts)
+def new_storage(opts)
 
   Ruote::Sequel::Storage.new($sequel, opts)
 end
