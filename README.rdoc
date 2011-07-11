@@ -12,7 +12,7 @@ This is how a ruote engine is setup with a ruote-dm storage (postgres) and a wor
   require 'json' # gem install json
   require 'ruote'
   require 'ruote-sequel' # gem install ruote-sequel
-  
+
   sequel = Sequel.connect('postgres://localhost/ruote_test')
   #sequel = Sequel.connect('mysql://root:root@localhost/ruote_test')
   #sequel = Sequel.connect(
@@ -21,16 +21,16 @@ This is how a ruote engine is setup with a ruote-dm storage (postgres) and a wor
   #  :password => 'root',
   #  :socket=> '/tmp/mysql.sock',
   #  :database => 'foo_development')
-  
+
   engine = Ruote::Engine.new(
     Ruote::Worker.new(
       Ruote::Sequel::Storage.new(sequel)))
 
   # ...
 
-To create the tables in the database :
+To create the table in the database :
 
-  Ruote::Sequel.create_table($sequel, :re_create => true)
+  Ruote::Sequel.create_table($sequel, true)
 
 
 Tested with sequel 3.20.0, with the postgresql (pg 0.10.1) adapter.
@@ -42,7 +42,7 @@ http://sequel.rubyforge.org/rdoc/files/doc/opening_databases_rdoc.html
 A single 'documents' table is used. To change this name :
 
   opts = { 'table_name' => 'ruote_docs' }
-  
+
   engine = Ruote::Engine.new(
     Ruote::Worker.new(
       Ruote::Sequel::Storage.new(sequel, opts)))
