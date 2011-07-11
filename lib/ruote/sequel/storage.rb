@@ -33,11 +33,15 @@ module Sequel
   # Creates the 'documents' table necessary for this storage.
   #
   # If re_create is set to true, it will destroy any previous 'documents'
-  # table and create it.
+  # table and create it. If false (default) then the table will be created
+  # if it doesn't already exist.
   #
-  def self.create_table(sequel, re_create=false, table_name=:documents)
+  # It's also possible to change the default table_name from 'documents' to
+  # something else with the optional third parameter
+  #
+  def self.create_table(sequel, re_create=false, table_name='documents')
 
-    m = re_create ? :create_table! : :create_table
+    m = re_create ? :create_table! : :create_table?
 
     sequel.send(m, table_name.to_sym) do
       String :ide, :size => 255, :null => false
