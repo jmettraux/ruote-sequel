@@ -1,4 +1,4 @@
-# encoding: utf-8
+# encoding: UTF-8
 
 Gem::Specification.new do |s|
 
@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
   s.summary = 'Sequel storage for ruote (a workflow engine)'
   s.description = %q{
 Sequel storage for ruote (a workflow engine)
-}
+  }
 
   #s.files = `git ls-files`.split("\n")
   s.files = Dir[
@@ -25,7 +25,7 @@ Sequel storage for ruote (a workflow engine)
     '*.gemspec', '*.txt', '*.rdoc', '*.md'
   ]
 
-  s.add_runtime_dependency 'sequel', '3.20.0'
+  s.add_runtime_dependency 'sequel'#, '>= 3.31.0'
   s.add_runtime_dependency 'ruote', ">= #{s.version}"
 
   s.add_development_dependency 'rake'

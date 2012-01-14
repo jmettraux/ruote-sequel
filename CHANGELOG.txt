@@ -2,7 +2,7 @@
 = ruote-sequel - CHANGELOG.txt
 
 
-== ruote-sequel 2.2.1    not yet released
+== ruote-sequel 2.3.0    not yet released
 
 - StorageParticipant#by_participant :skip :limit fix (Thanks Jan Topiński)
 - #delete : doc count > 1 is OK
