@@ -4,7 +4,12 @@
 
 == authors
 
-- John Mettraux - http://github.com/jmettraux
+- John Mettraux - https://github.com/jmettraux
+
+
+== contributors
+
+- Wesley Moore - https://github.com/wezm
 
 
 == feedback
