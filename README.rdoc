@@ -1,4 +1,3 @@
-
 = ruote-sequel
 
 Sequel storage implementation for ruote >= 2.2.0
@@ -6,7 +5,7 @@ Sequel storage implementation for ruote >= 2.2.0
 
 == usage
 
-This is how a ruote engine is setup with a ruote-dm storage (postgres) and a worker :
+This is how a ruote engine is setup with a ruote-sequel storage (postgres) and a worker :
 
   require 'rubygems'
   require 'json' # gem install json
