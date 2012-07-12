@@ -184,9 +184,11 @@ module Sequel
       docs = select_last_revs(docs, opts[:descending])
       docs = docs.collect { |d| Rufus::Json.decode(d[:doc]) }
 
-      keys && keys.first.is_a?(Regexp) ?
-        docs.select { |doc| keys.find { |key| key.match(doc['_id']) } } :
+      if keys && keys.first.is_a?(Regexp)
+        docs.select { |doc| keys.find { |key| key.match(doc['_id']) } }
+      else
         docs
+      end
 
       # (pass on the dataset.filter(:wfid => /regexp/) for now
       # since we have potentially multiple keys)
@@ -341,9 +343,8 @@ module Sequel
 
     def select_last_revs(docs, reverse=false)
 
-      docs = docs.inject({}) { |h, doc|
+      docs = docs.each_with_object({}) { |doc, h|
         h[doc[:ide]] = doc
-        h
       }.values.sort_by { |h|
         h[:ide]
       }
