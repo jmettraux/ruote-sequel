@@ -208,15 +208,6 @@ module Sequel
       @sequel[@table].delete
     end
 
-    # Returns a string representation the current content of the storage for
-    # a given type.
-    #
-    def dump(type)
-
-      "=== #{type} ===\n" +
-      get_many(type).map { |h| "  #{h['_id']} => #{h.inspect}" }.join("\n")
-    end
-
     # Calls #disconnect on the db. According to Sequel's doc, it closes
     # all the idle connections in the pool (not the active ones).
     #
