@@ -25,11 +25,12 @@ unless $sequel
 
   logger = nil
 
-  if ARGV.include?('-l') || ARGV.include?('--l')
-    FileUtils.rm('debug.log') rescue nil
-    logger = Logger.new('debug.log')
-  elsif ARGV.include?('-ls') || ARGV.include?('--ls')
-    logger = Logger.new($stdout)
+  case ENV['RUOTE_STORAGE_DEBUG']
+    when 'log'
+      FileUtils.rm('debug.log') rescue nil
+      logger = Logger.new('debug.log')
+    when 'stdout'
+      logger = Logger.new($stdout)
   end
 
   if logger
