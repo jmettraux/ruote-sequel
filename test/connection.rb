@@ -23,9 +23,6 @@ unless $sequel
       raise ArgumentError.new("unknown DB: #{ENV['RUOTE_STORAGE_DB'].inspect}")
   end
 
-  Ruote::Sequel.create_table($sequel, true)
-    # true forces re_create of 'documents' table
-
   require 'logger'
 
   logger = case ENV['RUOTE_STORAGE_DEBUG']
@@ -42,6 +39,9 @@ unless $sequel
     logger.level = Logger::DEBUG
     $sequel.loggers << logger
   end
+
+  Ruote::Sequel.create_table($sequel, true)
+    # true forces re_create of 'documents' table
 end
 
 
