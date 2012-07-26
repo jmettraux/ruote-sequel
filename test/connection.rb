@@ -17,6 +17,8 @@ unless $sequel
     when 'my', 'mysql'
       #Sequel.connect('mysql://root:root@localhost/ruote_test')
       Sequel.connect('mysql://root@localhost/ruote_test')
+    when 'mysql2'
+      Sequel.connect('mysql2://root@localhost/ruote_test')
     when /:/
       Sequel.connect(ENV['RUOTE_STORAGE_DB'])
     else
