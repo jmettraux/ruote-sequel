@@ -44,13 +44,18 @@ module Sequel
     m = re_create ? :create_table! : :create_table?
 
     sequel.send(m, table_name.to_sym) do
+
       String :ide, :size => 255, :null => false
       Integer :rev, :null => false
       String :typ, :size => 55, :null => false
       String :doc, :text => true, :null => false
-      String :wfid, :size => 255, :index => true
+      String :wfid, :size => 255
       String :participant_name, :size => 512
-      primary_key [ :ide, :rev, :typ ]
+
+      primary_key [ :typ, :ide, :rev ]
+
+      index :wfid
+      #index [ :typ, :wfid ]
     end
   end
 
@@ -155,7 +160,7 @@ module Sequel
       raise ArgumentError.new('no _rev for doc') unless doc['_rev']
 
       count = @sequel[@table].where(
-        :ide => doc['_id'], :typ => doc['type'], :rev => doc['_rev'].to_i
+        :typ => doc['type'], :ide => doc['_id'], :rev => doc['_rev'].to_i
       ).delete
 
       return (get(doc['type'], doc['_id']) || true) if count < 1
