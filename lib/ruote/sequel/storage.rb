@@ -119,6 +119,8 @@ module Sequel
 
     def put(doc, opts={})
 
+      cache_clear(doc['type'], doc['_id'])
+
       if doc['_rev']
 
         d = get(doc['type'], doc['_id'])
@@ -150,9 +152,7 @@ module Sequel
 
     def get(type, key)
 
-      d = do_get(type, key)
-
-      d ? Rufus::Json.decode(d[:doc]) : nil
+      cache_get(type, key) || do_get(type, key)
     end
 
     def delete(doc)
@@ -172,12 +172,15 @@ module Sequel
 
     def get_many(type, key=nil, opts={})
 
+      cached = cache_get_many(type, key, opts)
+      return cached if cached
+
       ds = @sequel[@table].where(:typ => type)
 
       keys = key ? Array(key) : nil
       ds = ds.filter(:wfid => keys) if keys && keys.first.is_a?(String)
 
-      return ds.all.size if opts[:count]
+      return ds.count if opts[:count]
 
       ds = ds.order(
         *(opts[:descending] ? [ :ide.desc, :rev.desc ] : [ :ide.asc, :rev.asc ])
@@ -248,6 +251,8 @@ module Sequel
     #
     def by_participant(type, participant_name, opts={})
 
+      # TODO: select(:doc) ?
+
       raise NotImplementedError if type != 'workitems'
 
       docs = @sequel[@table].where(
@@ -267,6 +272,8 @@ module Sequel
     # Querying workitems by field (warning, goes deep into the JSON structure)
     #
     def by_field(type, field, value, opts={})
+
+      # TODO: select(:doc) ?
 
       raise NotImplementedError if type != 'workitems'
 
@@ -289,6 +296,8 @@ module Sequel
     end
 
     def query_workitems(criteria)
+
+      # TODO: select(:doc) ?
 
       ds = @sequel[@table].where(:typ => 'workitems')
 
@@ -316,6 +325,13 @@ module Sequel
       count ? ds.size : ds.collect { |d| Ruote::Workitem.from_json(d[:doc]) }
     end
 
+    # TODO
+    #
+    def begin_step
+
+      prepare_cache
+    end
+
     protected
 
     def do_insert(doc, rev, update_rev=false)
@@ -341,11 +357,15 @@ module Sequel
 
     def do_get(type, key)
 
-      @sequel[@table].where(
+      d = @sequel[@table].select(:doc).where(
         :typ => type, :ide => key
       ).reverse_order(:rev).first
+
+      d ? Rufus::Json.decode(d[:doc]) : nil
     end
 
+    # TODO: SQLize this
+    #
     def select_last_revs(docs, reverse=false)
 
       docs = docs.each_with_object({}) { |doc, h|
@@ -355,6 +375,64 @@ module Sequel
       }
 
       reverse ? docs.reverse : docs
+    end
+
+    #--
+    # worker step cache
+    #
+    # in order to cut down the number of selects, do one select with
+    # all the information the worker needs for one step of work
+    #++
+
+    CACHED_TYPES = %w[ msgs schedules configurations variables ]
+
+    def prepare_cache
+
+      CACHED_TYPES.each { |t| cache[t] = {} }
+
+      @sequel[@table].select(:doc).where(:typ => CACHED_TYPES).each do |d|
+        doc = Rufus::Json.decode(d[:doc])
+        (cache[doc['type']] ||= {})[doc['_id']] = doc
+      end
+
+      cache['variables']['trackers'] ||=
+        { '_id' => 'trackers', 'type' => 'variables', 'trackers' => {} }
+    end
+
+    # TODO
+    #
+    def cache_get(type, key)
+
+      (cache[type] || {})[key]
+    end
+
+    # TODO
+    #
+    def cache_get_many(type, keys, options)
+
+      if CACHED_TYPES.include?(type) && ! options[:batch]
+        cache[type].values
+      else
+        nil
+      end
+    end
+
+    # TODO
+    #
+    def cache_clear(type, key)
+
+      (cache[type] || {}).delete(key)
+    end
+
+    # TODO
+    #
+    def cache
+
+      worker = Thread.current['ruote_worker']
+
+      return {} unless worker
+
+      (Thread.current["cache_#{worker.name}"] ||= {})
     end
   end
 end
