@@ -119,7 +119,7 @@ module Sequel
 
     def put(doc, opts={})
 
-      cache_clear(doc['type'], doc['_id'])
+      cache_clear(doc)
 
       if doc['_rev']
 
@@ -399,14 +399,15 @@ module Sequel
         { '_id' => 'trackers', 'type' => 'variables', 'trackers' => {} }
     end
 
-    # TODO
+    # Ask the cache for a doc. Returns nil if it's not cached.
     #
     def cache_get(type, key)
 
       (cache[type] || {})[key]
     end
 
-    # TODO
+    # Ask the cache for a set of documents. Returns nil if it's not cached
+    # or caching is not OK.
     #
     def cache_get_many(type, keys, options)
 
@@ -417,14 +418,15 @@ module Sequel
       end
     end
 
-    # TODO
+    # Removes a document from the cache.
     #
-    def cache_clear(type, key)
+    def cache_clear(doc)
 
-      (cache[type] || {}).delete(key)
+      (cache[doc['type']] || {}).delete(doc['_id'])
     end
 
-    # TODO
+    # Returns the cache for the given thread. Returns {} if there is no
+    # cache available.
     #
     def cache
 
