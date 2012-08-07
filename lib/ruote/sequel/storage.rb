@@ -410,7 +410,7 @@ module Sequel
     #
     def cache_get_many(type, keys, options)
 
-      if CACHED_TYPES.include?(type) && ! options[:batch]
+      if !options[:batch] && CACHED_TYPES.include?(type) && cache[type]
         cache[type].values
       else
         nil
