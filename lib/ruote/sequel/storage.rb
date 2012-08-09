@@ -336,7 +336,9 @@ module Sequel
       select_last_revs(ds).collect { |d| Ruote::Workitem.from_json(d[:doc]) }
     end
 
-    # TODO
+    # Used by the worker to indicate a new step begins. For ruote-sequel,
+    # it means the cache can be prepared (a unique select yielding
+    # all the info necessary for one worker step (expressions excluded)).
     #
     def begin_step
 
