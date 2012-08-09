@@ -197,14 +197,12 @@ module Sequel
       return ds.count if opts[:count]
 
       ds = ds.order(
-        *(opts[:descending] ? [ :ide.desc, :rev.desc ] : [ :ide.asc, :rev.asc ])
+        opts[:descending] ? :ide.desc : :ide.asc, :rev.desc
       ).limit(
-        opts[:limit], opts[:skip]
+        opts[:limit], opts[:skip] || opts[:offset]
       )
 
-      docs = ds.all
-
-      docs = select_last_revs(docs, opts[:descending])
+      docs = select_last_revs(ds)
       docs = docs.collect { |d| Rufus::Json.decode(d[:doc]) }
 
       if keys && keys.first.is_a?(Regexp)
@@ -272,13 +270,13 @@ module Sequel
 
       docs = @sequel[@table].where(
         :typ => type, :participant_name => participant_name
-      ).order(
-        :ide.asc, :rev.asc
       ).limit(
         opts[:limit], opts[:offset] || opts[:skip]
       )
 
       return docs.count if opts[:count]
+
+      docs = docs.order(:ide.asc, :rev.desc)
 
       select_last_revs(docs).collect { |d| Ruote::Workitem.from_json(d[:doc]) }
     end
@@ -299,13 +297,13 @@ module Sequel
         :typ => type
       ).filter(
         :doc.like(lk.join)
-      ).order(
-        :ide.asc, :rev.asc
       ).limit(
-        opts[:limit], opts[:skip] || opts[:offset]
+        opts[:limit], opts[:offset] || opts[:skip]
       )
 
       return docs.count if opts[:count]
+
+      docs = docs.order(:ide.asc, :rev.desc)
 
       select_last_revs(docs).collect { |d| Ruote::Workitem.from_json(d[:doc]) }
     end
@@ -337,7 +335,9 @@ module Sequel
 
       return ds.count if count
 
-      select_last_revs(ds.all).map { |d| Ruote::Workitem.from_json(d[:doc]) }
+      ds = ds.order(:ide.asc, :rev.desc)
+
+      select_last_revs(ds).collect { |d| Ruote::Workitem.from_json(d[:doc]) }
     end
 
     # TODO
@@ -379,17 +379,16 @@ module Sequel
       d ? Rufus::Json.decode(d[:doc]) : nil
     end
 
-    # TODO
+    # Weed out older docs (same ide, smaller rev).
     #
-    def select_last_revs(docs, reverse=false)
+    # This could all have been done via SQL, but those inconsistencies
+    # are rare, the cost of the pumped SQL is not constant :-(
+    #
+    def select_last_revs(docs)
 
-      docs = docs.each_with_object({}) { |doc, h|
-        h[doc[:ide]] = doc
-      }.values.sort_by { |h|
-        h[:ide]
+      docs.each_with_object([]) { |doc, a|
+        a << doc if a.last.nil? || doc[:ide] != a.last[:ide]
       }
-
-      reverse ? docs.reverse : docs
     end
 
     #--
