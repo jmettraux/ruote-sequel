@@ -264,19 +264,19 @@ module Sequel
     #
     def by_participant(type, participant_name, opts={})
 
-      # TODO: select(:doc) ?
-
       raise NotImplementedError if type != 'workitems'
 
       docs = @sequel[@table].where(
         :typ => type, :participant_name => participant_name
-      ).limit(
-        opts[:limit], opts[:offset] || opts[:skip]
       )
 
       return docs.count if opts[:count]
 
-      docs = docs.order(:ide.asc, :rev.desc)
+      docs = docs.order(
+        :ide.asc, :rev.desc
+      ).limit(
+        opts[:limit], opts[:offset] || opts[:skip]
+      )
 
       select_last_revs(docs).collect { |d| Ruote::Workitem.from_json(d[:doc]) }
     end
@@ -284,8 +284,6 @@ module Sequel
     # Querying workitems by field (warning, goes deep into the JSON structure)
     #
     def by_field(type, field, value, opts={})
-
-      # TODO: select(:doc) ?
 
       raise NotImplementedError if type != 'workitems'
 
@@ -297,20 +295,20 @@ module Sequel
         :typ => type
       ).filter(
         :doc.like(lk.join)
-      ).limit(
-        opts[:limit], opts[:offset] || opts[:skip]
       )
 
       return docs.count if opts[:count]
 
-      docs = docs.order(:ide.asc, :rev.desc)
+      docs = docs.order(
+        :ide.asc, :rev.desc
+      ).limit(
+        opts[:limit], opts[:offset] || opts[:skip]
+      )
 
       select_last_revs(docs).collect { |d| Ruote::Workitem.from_json(d[:doc]) }
     end
 
     def query_workitems(criteria)
-
-      # TODO: select(:doc) ?
 
       ds = @sequel[@table].where(:typ => 'workitems')
 
@@ -318,8 +316,6 @@ module Sequel
 
       limit = criteria.delete('limit')
       offset = criteria.delete('offset') || criteria.delete('skip')
-
-      ds = ds.limit(limit, offset)
 
       wfid =
         criteria.delete('wfid')
@@ -335,7 +331,7 @@ module Sequel
 
       return ds.count if count
 
-      ds = ds.order(:ide.asc, :rev.desc)
+      ds = ds.order(:ide.asc, :rev.desc).limit(limit, offset)
 
       select_last_revs(ds).collect { |d| Ruote::Workitem.from_json(d[:doc]) }
     end
