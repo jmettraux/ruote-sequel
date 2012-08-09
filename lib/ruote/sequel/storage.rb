@@ -104,6 +104,17 @@ module Sequel
       nil
     end
 
+    # Used to reserve 'msgs' and 'schedules'. Simply deletes the document,
+    # return true if the delete was successful (ie if the reservation is
+    # valid).
+    #
+    def reserve(doc)
+
+      @sequel[@table].where(
+        :typ => doc['type'], :ide => doc['_id'], :rev => 1
+      ).delete > 0
+    end
+
     def put_schedule(flavour, owner_fei, s, msg)
 
       # put_schedule is a unique action, no need for all the complexity of put

@@ -1,3 +1,5 @@
 
+[o] implement #reserve (simpler delete?)
+    that will prevent the SELECT in case of delete count < 1
 [ ] lots of select('configurations', 'engine') when starting, investigate
 
