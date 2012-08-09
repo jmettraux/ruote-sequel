@@ -203,6 +203,7 @@ module Sequel
       )
 
       docs = ds.all
+
       docs = select_last_revs(docs, opts[:descending])
       docs = docs.collect { |d| Rufus::Json.decode(d[:doc]) }
 
@@ -277,10 +278,9 @@ module Sequel
         opts[:limit], opts[:offset] || opts[:skip]
       )
 
-      docs = select_last_revs(docs)
+      return docs.count if opts[:count]
 
-      opts[:count] ?
-        docs.size : docs.map { |d| Ruote::Workitem.from_json(d[:doc]) }
+      select_last_revs(docs).collect { |d| Ruote::Workitem.from_json(d[:doc]) }
     end
 
     # Querying workitems by field (warning, goes deep into the JSON structure)
@@ -301,12 +301,13 @@ module Sequel
         :doc.like(lk.join)
       ).order(
         :ide.asc, :rev.asc
-      ).limit(opts[:limit], opts[:skip] || opts[:offset])
+      ).limit(
+        opts[:limit], opts[:skip] || opts[:offset]
+      )
 
-      docs = select_last_revs(docs)
+      return docs.count if opts[:count]
 
-      opts[:count] ?
-        docs.size : docs.map { |d| Ruote::Workitem.from_json(d[:doc]) }
+      select_last_revs(docs).collect { |d| Ruote::Workitem.from_json(d[:doc]) }
     end
 
     def query_workitems(criteria)
@@ -334,9 +335,9 @@ module Sequel
         ds = ds.filter(:doc.like("%\"#{k}\":#{Rufus::Json.encode(v)}%"))
       end
 
-      ds = select_last_revs(ds.all)
+      return ds.count if count
 
-      count ? ds.size : ds.collect { |d| Ruote::Workitem.from_json(d[:doc]) }
+      select_last_revs(ds.all).map { |d| Ruote::Workitem.from_json(d[:doc]) }
     end
 
     # TODO
@@ -378,7 +379,7 @@ module Sequel
       d ? Rufus::Json.decode(d[:doc]) : nil
     end
 
-    # TODO: SQLize this
+    # TODO
     #
     def select_last_revs(docs, reverse=false)
 
