@@ -170,6 +170,9 @@ module Sequel
 
       raise ArgumentError.new('no _rev for doc') unless doc['_rev']
 
+      cache_clear(doc)
+        # usually not necessary, adding it not to forget it later on
+
       count = @sequel[@table].where(
         :typ => doc['type'], :ide => doc['_id'], :rev => doc['_rev'].to_i
       ).delete
