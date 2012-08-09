@@ -1,0 +1,93 @@
+
+# ruote-sequel
+
+Sequel storage implementation for ruote >= 2.2.0
+
+
+## usage
+
+This is how a ruote engine is setup with a ruote-sequel storage (postgres) and a worker :
+
+```ruby
+require 'rubygems'
+require 'json' # gem install json
+require 'ruote'
+require 'ruote-sequel' # gem install ruote-sequel
+
+sequel = Sequel.connect('postgres://localhost/ruote_test')
+#sequel = Sequel.connect('mysql://root:root@localhost/ruote_test')
+#sequel = Sequel.connect(
+#  :adapter => 'mysql2',
+#  :user => 'root',
+#  :password => 'root',
+#  :socket=> '/tmp/mysql.sock',
+#  :database => 'foo_development')
+
+engine = Ruote::Engine.new(
+  Ruote::Worker.new(
+    Ruote::Sequel::Storage.new(sequel)))
+
+# ...
+```
+
+To create the table in the database :
+
+```ruby
+Ruote::Sequel.create_table($sequel, true)
+```
+
+Tested with sequel 3.20.0, with the postgresql (pg 0.10.1) adapter.
+
+To learn more about connecting Sequel to a database :
+
+<http://sequel.rubyforge.org/rdoc/files/doc/opening_databases_rdoc.html>
+
+A single 'documents' table is used. To change this name :
+
+```ruby
+opts = { 'table_name' => 'ruote_docs' }
+
+engine = Ruote::Engine.new(
+  Ruote::Worker.new(
+    Ruote::Sequel::Storage.new(sequel, opts)))
+```
+
+
+## running tests
+
+assuming you have
+
+    ruote/
+    ruote-sequel/
+
+* unit tests :
+
+get into ruote/ and do
+
+    $ ruby test/unit/storage.rb -- --sequel
+
+* functional tests :
+
+get into ruote/ and do
+
+    $ ruby test/functional/test.rb -- --sequel
+
+
+## license
+
+MIT
+
+
+## links
+
+http://sequel.rubyforge.org/
+
+http://ruote.rubyforge.org/
+http://github.com/jmettraux/ruote-sequel
+
+
+## feedback
+
+mailing list : <http://groups.google.com/group/openwferu-users>
+irc : irc.freenode.net #ruote
+
