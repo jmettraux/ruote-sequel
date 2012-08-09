@@ -398,13 +398,21 @@ module Sequel
 
     CACHED_TYPES = %w[ msgs schedules configurations variables ]
 
+    # One select to grab in all the info necessary for a worker step
+    # (expressions excepted).
+    #
     def prepare_cache
 
       CACHED_TYPES.each { |t| cache[t] = {} }
 
-      @sequel[@table].select(:doc).where(:typ => CACHED_TYPES).each do |d|
-        doc = Rufus::Json.decode(d[:doc])
-        (cache[doc['type']] ||= {})[doc['_id']] = doc
+      @sequel[@table].select(
+        :ide, :typ, :doc
+      ).where(
+        :typ => CACHED_TYPES
+      ).order(
+        :ide.asc, :rev.desc
+      ).each do |d|
+        (cache[d[:typ]] ||= {})[d[:ide]] ||= Rufus::Json.decode(d[:doc])
       end
 
       cache['variables']['trackers'] ||=
