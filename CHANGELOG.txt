@@ -4,6 +4,7 @@
 
 == ruote-sequel 2.3.0    not yet released
 
+- switched to "begin_step" model
 - StorageParticipant#by_participant :skip :limit fix (Thanks Jan Topiński)
 - #delete : doc count > 1 is OK
 - StorageParticipant :count => true made consistent (Thanks Jan Topiński)
