@@ -2,7 +2,7 @@
 = ruote-sequel - CHANGELOG.txt
 
 
-== ruote-sequel 2.3.0    not yet released
+== ruote-sequel 2.3.0    released 2012/09/01
 
 - switched to "begin_step" model
 - StorageParticipant#by_participant :skip :limit fix (Thanks Jan Topiński)
