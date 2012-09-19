@@ -26,7 +26,7 @@ Sequel storage for ruote (a workflow engine)
   ]
 
   s.add_runtime_dependency 'sequel'#, '>= 3.31.0'
-  s.add_runtime_dependency 'ruote', ">= #{s.version}"
+  s.add_runtime_dependency 'ruote', ">= #{s.version.to_s.split('.')[0, 3].join('.')}"
 
   s.add_development_dependency 'rake'
   s.add_development_dependency 'pg', '0.10.1'
