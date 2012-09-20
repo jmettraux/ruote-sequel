@@ -203,7 +203,7 @@ module Sequel
       )
 
       docs = select_last_revs(ds)
-      docs = docs.collect { |d| Rufus::Json.decode(d[:doc]) }
+      docs = docs.collect { |d| decode_doc(d) }
 
       if keys && keys.first.is_a?(Regexp)
         docs.select { |doc| keys.find { |key| key.match(doc['_id']) } }
@@ -347,6 +347,16 @@ module Sequel
 
     protected
 
+    def decode_doc(doc)
+
+      return nil if doc.nil?
+
+      doc = doc[:doc]
+      doc = doc.read if doc.respond_to?(:read)
+
+      Rufus::Json.decode(doc)
+    end
+
     def do_insert(doc, rev, update_rev=false)
 
       doc = doc.send(
@@ -374,7 +384,7 @@ module Sequel
         :typ => type, :ide => key
       ).reverse_order(:rev).first
 
-      d ? Rufus::Json.decode(d[:doc]) : nil
+      decode_doc(d)
     end
 
     # Weed out older docs (same ide, smaller rev).
@@ -412,7 +422,7 @@ module Sequel
       ).order(
         :ide.asc, :rev.desc
       ).each do |d|
-        (cache[d[:typ]] ||= {})[d[:ide]] ||= Rufus::Json.decode(d[:doc])
+        (cache[d[:typ]] ||= {})[d[:ide]] ||= decode_doc(d)
       end
 
       cache['variables']['trackers'] ||=

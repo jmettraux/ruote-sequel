@@ -9,6 +9,7 @@
 
 == contributors
 
+- Geoff Herney - https://github.com/gherney
 - Wesley Moore - https://github.com/wezm
 
 
