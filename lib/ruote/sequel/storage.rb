@@ -363,14 +363,36 @@ module Sequel
         update_rev ? :merge! : :merge,
         { '_rev' => rev, 'put_at' => Ruote.now_to_utc_s })
 
-      @sequel[@table].insert(
-        :ide => doc['_id'],
-        :rev => rev,
-        :typ => doc['type'],
-        :doc => Rufus::Json.encode(doc),
-        :wfid => extract_wfid(doc),
-        :participant_name => doc['participant_name']
-      )
+      # https://github.com/jeremyevans/sequel/issues/557#issuecomment-8939069
+      # There's gotta be a way to keep Oracle-specific code outta here.  Will bind vars work on all DB's?
+      if @sequel.database_type == :oracle
+        @sequel[@table].call(
+          :insert, { 
+            :ide => (doc['_id'] || ''),
+            :rev => (rev || ''),
+            :typ => (doc['type'] || ''),
+            :doc => (Rufus::Json.encode(doc) || ''),
+            :wfid => (extract_wfid(doc) || ''),
+            :participant_name => (doc['participant_name'] || '')
+          }, {
+            :ide => :$ide,
+            :rev => :$rev,
+            :typ => :$typ,
+            :doc => :$doc,
+            :wfid => :$wfid,
+            :participant_name => :$participant_name
+          }
+        )
+      else
+        @sequel[@table].insert(
+          :ide => doc['_id'],
+          :rev => rev,
+          :typ => doc['type'],
+          :doc => Rufus::Json.encode(doc),
+          :wfid => extract_wfid(doc),
+          :participant_name => doc['participant_name']
+        )
+      end
     end
 
     def extract_wfid(doc)
@@ -469,4 +491,3 @@ module Sequel
   end
 end
 end
-
