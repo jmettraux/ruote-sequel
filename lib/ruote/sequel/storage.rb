@@ -363,36 +363,29 @@ module Sequel
         update_rev ? :merge! : :merge,
         { '_rev' => rev, 'put_at' => Ruote.now_to_utc_s })
 
-      # https://github.com/jeremyevans/sequel/issues/557#issuecomment-8939069
-      # There's gotta be a way to keep Oracle-specific code outta here.  Will bind vars work on all DB's?
-      if @sequel.database_type == :oracle
-        @sequel[@table].call(
-          :insert, { 
-            :ide => (doc['_id'] || ''),
-            :rev => (rev || ''),
-            :typ => (doc['type'] || ''),
-            :doc => (Rufus::Json.encode(doc) || ''),
-            :wfid => (extract_wfid(doc) || ''),
-            :participant_name => (doc['participant_name'] || '')
-          }, {
-            :ide => :$ide,
-            :rev => :$rev,
-            :typ => :$typ,
-            :doc => :$doc,
-            :wfid => :$wfid,
-            :participant_name => :$participant_name
-          }
-        )
-      else
-        @sequel[@table].insert(
-          :ide => doc['_id'],
-          :rev => rev,
-          :typ => doc['type'],
-          :doc => Rufus::Json.encode(doc),
-          :wfid => extract_wfid(doc),
-          :participant_name => doc['participant_name']
-        )
-      end
+      # Use bound variables
+      # http://sequel.rubyforge.org/rdoc/files/doc/prepared_statements_rdoc.html
+      #
+      # That makes Oracle happy (the doc field might > 4000 characters)
+      #
+      # Thanks Geoff Herney
+      #
+      @sequel[@table].call(
+        :insert, {
+          :ide => (doc['_id'] || ''),
+          :rev => (rev || ''),
+          :typ => (doc['type'] || ''),
+          :doc => (Rufus::Json.encode(doc) || ''),
+          :wfid => (extract_wfid(doc) || ''),
+          :participant_name => (doc['participant_name'] || '')
+        }, {
+          :ide => :$ide,
+          :rev => :$rev,
+          :typ => :$typ,
+          :doc => :$doc,
+          :wfid => :$wfid,
+          :participant_name => :$participant_name
+        })
     end
 
     def extract_wfid(doc)
