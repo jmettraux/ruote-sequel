@@ -197,7 +197,7 @@ module Sequel
       return ds.count if opts[:count]
 
       ds = ds.order(
-        opts[:descending] ? :ide.desc : :ide.asc, :rev.desc
+        opts[:descending] ? ::Sequel.desc(:ide) : ::Sequel.asc(:ide), ::Sequel.desc(:rev)
       ).limit(
         opts[:limit], opts[:skip] || opts[:offset]
       )
@@ -273,7 +273,7 @@ module Sequel
       return docs.count if opts[:count]
 
       docs = docs.order(
-        :ide.asc, :rev.desc
+        ::Sequel.asc(:ide), ::Sequel.desc(:rev)
       ).limit(
         opts[:limit], opts[:offset] || opts[:skip]
       )
@@ -294,13 +294,13 @@ module Sequel
       docs = @sequel[@table].where(
         :typ => type
       ).filter(
-        :doc.like(lk.join)
+        ::Sequel.like(:doc, lk.join)
       )
 
       return docs.count if opts[:count]
 
       docs = docs.order(
-        :ide.asc, :rev.desc
+        ::Sequel.asc(:ide), ::Sequel.desc(:rev)
       ).limit(
         opts[:limit], opts[:offset] || opts[:skip]
       )
@@ -322,16 +322,16 @@ module Sequel
       pname =
         criteria.delete('participant_name') || criteria.delete('participant')
 
-      ds = ds.filter(:ide.like("%!#{wfid}")) if wfid
+      ds = ds.filter(::Sequel.like(:ide, "%!#{wfid}")) if wfid
       ds = ds.filter(:participant_name => pname) if pname
 
       criteria.collect do |k, v|
-        ds = ds.filter(:doc.like("%\"#{k}\":#{Rufus::Json.encode(v)}%"))
+        ds = ds.filter(::Sequel.like(:doc, "%\"#{k}\":#{Rufus::Json.encode(v)}%"))
       end
 
       return ds.count if count
 
-      ds = ds.order(:ide.asc, :rev.desc).limit(limit, offset)
+      ds = ds.order(::Sequel.asc(:ide), ::Sequel.desc(:rev)).limit(limit, offset)
 
       select_last_revs(ds).collect { |d| Ruote::Workitem.from_json(d[:doc]) }
     end
@@ -435,7 +435,7 @@ module Sequel
       ).where(
         :typ => CACHED_TYPES
       ).order(
-        :ide.asc, :rev.desc
+        ::Sequel.asc(:ide), ::Sequel.desc(:rev)
       ).each do |d|
         (cache[d[:typ]] ||= {})[d[:ide]] ||= decode_doc(d)
       end
