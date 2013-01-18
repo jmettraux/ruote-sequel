@@ -16,6 +16,7 @@
 
 == feedback
 
+- yzhang - reconnect issue
 - Chad Albers - https://github.com/neomantic
 - Eric Smith - issue reporting
 

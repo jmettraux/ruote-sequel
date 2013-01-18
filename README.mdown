@@ -52,6 +52,22 @@ engine = Ruote::Engine.new(
     Ruote::Sequel::Storage.new(sequel, opts)))
 ```
 
+In case of reconnection errors (mysql), doing something like
+
+```ruby
+  sequel = Sequel.connect(
+    'mysql://root:root@localhost/ruote_test',
+    :after_connect => proc { |c| c.reconnect = true })
+      #
+      # or
+      #
+  sequel = Sequel.connect(
+    'mysql://root:root@localhost/ruote_test',
+    :after_connect => proc { |c| c.send(:reconnect=, true) })
+```
+
+might help (seems not OK with mysql2).
+
 
 ## running tests
 
