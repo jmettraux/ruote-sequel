@@ -27,15 +27,18 @@ unless $sequel
 
   require 'logger'
 
-  logger = case ENV['RUOTE_STORAGE_DEBUG']
-    when 'log'
-      FileUtils.rm('debug.log') rescue nil
-      Logger.new('debug.log')
-    when 'stdout'
-      Logger.new($stdout)
-    else
-      nil
-  end
+  logger =
+    case dbg = ENV['RUOTE_STORAGE_DEBUG']
+      when 'log'
+        FileUtils.rm("debug_#{$$}.log") rescue nil
+        Logger.new("debug_#{$$}.log")
+      when 'stdout'
+        Logger.new($stdout)
+      when /\.(log|txt)$/
+        Logger.new(dbg)
+      else
+        nil
+    end
 
   if logger
     logger.level = Logger::DEBUG
