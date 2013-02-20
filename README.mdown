@@ -30,6 +30,14 @@ engine = Ruote::Engine.new(
 # ...
 ```
 
+If you experience issue with the mysql2 driver and disconnections, try adding an :after_connect clause, like in:
+
+```ruby
+Sequel.connect(
+  'mysql2://root@localhost/ruote_test',
+  :after_connect => proc { |c| c.send(:reconnect=, true) })
+```
+
 To create the table in the database :
 
 ```ruby

@@ -18,7 +18,9 @@ unless $sequel
       #Sequel.connect('mysql://root:root@localhost/ruote_test')
       Sequel.connect('mysql://root@localhost/ruote_test')
     when 'mysql2'
-      Sequel.connect('mysql2://root@localhost/ruote_test')
+      Sequel.connect(
+        'mysql2://root@localhost/ruote_test',
+        :after_connect => proc { |c| c.send(:reconnect=, true) })
     when /:/
       Sequel.connect(ENV['RUOTE_STORAGE_DB'])
     else
