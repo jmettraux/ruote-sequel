@@ -45,7 +45,7 @@ To learn more about connecting Sequel to a database :
 A single 'documents' table is used. To change this name :
 
 ```ruby
-opts = { 'table_name' => 'ruote_docs' }
+opts = { 'sequel_table_name' => 'ruote_docs' }
 
 engine = Ruote::Engine.new(
   Ruote::Worker.new(
