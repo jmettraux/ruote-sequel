@@ -26,7 +26,7 @@
 module Ruote
 module Sequel
 
-  VERSION = '2.3.1'
+  VERSION = '2.3.0.2'
 end
 end
 

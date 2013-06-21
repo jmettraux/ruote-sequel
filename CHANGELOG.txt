@@ -4,6 +4,10 @@
 
 == ruote-sequel 2.3.1    not yet released
 
+
+== ruote-sequel 2.3.0.2    not yet released
+
+- :asc / :desc fix by Iuri Gagnidze
 - d[:doc].read if possible, as devised with Geoff Herney in
   https://groups.google.com/d/topic/openwferu-users/ivLPT4jASVc/discussion
 
