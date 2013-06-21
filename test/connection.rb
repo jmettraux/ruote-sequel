@@ -11,21 +11,22 @@ require 'ruote-sequel'
 
 unless $sequel
 
-  $sequel = case ENV['RUOTE_STORAGE_DB'] || 'postgres'
-    when 'pg', 'postgres'
-      Sequel.connect('postgres://localhost/ruote_test')
-    when 'my', 'mysql'
-      #Sequel.connect('mysql://root:root@localhost/ruote_test')
-      Sequel.connect('mysql://root@localhost/ruote_test')
-    when 'mysql2'
-      Sequel.connect(
-        'mysql2://root@localhost/ruote_test',
-        :after_connect => proc { |c| c.send(:reconnect=, true) })
-    when /:/
-      Sequel.connect(ENV['RUOTE_STORAGE_DB'])
-    else
-      raise ArgumentError.new("unknown DB: #{ENV['RUOTE_STORAGE_DB'].inspect}")
-  end
+  $sequel =
+    case ENV['RUOTE_STORAGE_DB'] || 'postgres'
+      when 'pg', 'postgres'
+        Sequel.connect('postgres://localhost/ruote_test')
+      when 'my', 'mysql'
+        #Sequel.connect('mysql://root:root@localhost/ruote_test')
+        Sequel.connect('mysql://root@localhost/ruote_test')
+      when 'mysql2'
+        Sequel.connect(
+          'mysql2://root@localhost/ruote_test',
+          :after_connect => proc { |c| c.send(:reconnect=, true) })
+      when /:/
+        Sequel.connect(ENV['RUOTE_STORAGE_DB'])
+      else
+        raise ArgumentError.new("unknown DB: #{ENV['RUOTE_STORAGE_DB'].inspect}")
+    end
 
   require 'logger'
 
