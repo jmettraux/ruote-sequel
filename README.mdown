@@ -33,6 +33,7 @@ engine = Ruote::Engine.new(
 To create the table in the database :
 
 ```ruby
+$sequel = Sequel.connect('postgres://localhost/ruote_test')
 Ruote::Sequel.create_table($sequel, true)
 ```
 
@@ -112,4 +113,3 @@ http://github.com/jmettraux/ruote-sequel
 
 mailing list : <http://groups.google.com/group/openwferu-users>
 irc : irc.freenode.net #ruote
-
