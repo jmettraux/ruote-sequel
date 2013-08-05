@@ -13,6 +13,7 @@ Gem::Specification.new do |s|
   s.email = [ 'jmettraux@gmail.com' ]
   s.homepage = 'http://ruote.rubyforge.org'
   s.rubyforge_project = 'ruote'
+  s.license = 'MIT'
   s.summary = 'Sequel storage for ruote (a workflow engine)'
   s.description = %q{
 Sequel storage for ruote (a workflow engine)
