@@ -78,6 +78,9 @@ module Sequel
   #
   #   # ...
   #
+  # At initialization, this storage will create the table in the database
+  # if missing.
+  #
   class Storage
 
     include Ruote::StorageBase
@@ -86,11 +89,16 @@ module Sequel
     #
     attr_reader :sequel
 
+    # Creates the Sequel-based storage.
+    #
+    # Will create the table it needs if it is not yet present.
+    #
     def initialize(sequel, options={})
 
       @sequel = sequel
-      #@options = options
       @table = (options['sequel_table_name'] || :documents).to_sym
+
+      Ruote::Sequel.create_table(@sequel, false, @table)
 
       replace_engine_configuration(options)
     end

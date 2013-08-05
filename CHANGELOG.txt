@@ -4,6 +4,8 @@
 
 == ruote-sequel 2.3.1    not yet released
 
+- creates the table if missing at initialization
+
 
 == ruote-sequel 2.3.0.2    not yet released
 
