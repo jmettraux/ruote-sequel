@@ -1,7 +1,5 @@
 
-$:.unshift('.') # 1.9.2
-
-require 'rubygems'
+#require 'rubygems'
 
 require 'rake'
 require 'rake/clean'
