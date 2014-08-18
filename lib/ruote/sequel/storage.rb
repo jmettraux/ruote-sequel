@@ -161,12 +161,18 @@ module Sequel
           # failure
       end
 
-      @sequel[@table].where(
-        :typ => doc['type'], :ide => doc['_id']
-      ).filter { rev < nrev }.delete
+      10.times do |i|
+        begin
+          @sequel[@table].where(
+            :typ => doc['type'], :ide => doc['_id']
+          ).filter { rev < nrev }.delete
+          return nil # success
+        rescue ::Sequel::DatabaseError => de
+puts "put: got exception #{de.to_s}, try number #{i + 1}"
+        end
+      end
 
-      nil
-        # success
+      raise Exception.new("Ruote::Sequel::Storage.put failed")
     end
 
     def get(type, key)
@@ -193,6 +199,19 @@ module Sequel
     end
 
     def get_many(type, key=nil, opts={})
+      batch_size = 200
+puts "MY get_many #{type} #{opts}"
+      if key.is_a?(Array) && key.size > batch_size
+        docs = []
+i = 0
+        key.each_slice(batch_size) do |slice|
+i += 1
+puts "slice #{i}"
+          docs << get_many(type, slice, opts)
+        end
+puts "got #{docs.size} docs"
+        return docs
+      end
 
       cached = cache_get_many(type, key, opts)
       return cached if cached
@@ -226,8 +245,7 @@ module Sequel
     # Returns all the ids of the documents of a given type.
     #
     def ids(type)
-
-      @sequel[@table].where(:typ => type).collect { |d| d[:ide] }.uniq.sort
+      @sequel["select distinct(ide) from #{@table} order by 1"].map(:ide)
     end
 
     # Nukes all the documents in this storage.
@@ -416,8 +434,8 @@ module Sequel
     # are rare, the cost of the pumped SQL is not constant :-(
     #
     def select_last_revs(docs)
-
-      docs.each_with_object([]) { |doc, a|
+puts "select_last_revs: #{docs.select_sql}"
+      docs.all.each_with_object([]) { |doc, a|
         a << doc if a.last.nil? || doc[:ide] != a.last[:ide]
       }
     end
@@ -435,17 +453,25 @@ module Sequel
     # (expressions excepted).
     #
     def prepare_cache
-
+puts "MY prepare_cache"
       CACHED_TYPES.each { |t| cache[t] = {} }
 
-      @sequel[@table].select(
-        :ide, :typ, :doc
-      ).where(
-        :typ => CACHED_TYPES
-      ).order(
-        ::Sequel.asc(:ide), ::Sequel.desc(:rev)
-      ).each do |d|
-        (cache[d[:typ]] ||= {})[d[:ide]] ||= decode_doc(d)
+      CACHED_TYPES.each do |typ|
+        stmt = @sequel[@table].select(
+          :ide, :typ, :doc
+        ).where(
+          :typ => typ
+        ).limit(
+          100
+        ).order(
+          ::Sequel.asc(:ide), ::Sequel.desc(:rev)
+        )
+
+        list = stmt.all
+puts "caching #{list.size} #{typ}"
+        list.each do |d|
+          (cache[d[:typ]] ||= {})[d[:ide]] ||= decode_doc(d)
+        end
       end
 
       cache['variables']['trackers'] ||=
@@ -463,12 +489,7 @@ module Sequel
     # or caching is not OK.
     #
     def cache_get_many(type, keys, options)
-
-      if !options[:batch] && CACHED_TYPES.include?(type) && cache[type]
-        cache[type].values
-      else
-        nil
-      end
+      nil
     end
 
     # Removes a document from the cache.
