@@ -51,7 +51,7 @@ module Sequel
       String :doc, :text => true, :null => false
       String :wfid, :size => 255
       String :participant_name, :size => 512
-      Integer :owner
+      String :owner
       DateTime :due_at
       String :task, :size => 20
 
@@ -406,7 +406,7 @@ module Sequel
 
     def try_get(doc, *paths)
       paths.inject(doc) do |val, path|
-        val.nil? ? nil : val[path]
+        val[path] if val.is_a? Hash
       end
     end
 
