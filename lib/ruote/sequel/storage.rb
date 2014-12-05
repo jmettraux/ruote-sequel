@@ -51,10 +51,12 @@ module Sequel
       String :doc, :text => true, :null => false
       String :wfid, :size => 255
       String :participant_name, :size => 512
+      Integer :owner
 
       primary_key [ :typ, :ide, :rev ]
 
       index :wfid
+      index :owner
       #index [ :typ, :wfid ]
     end
   end
@@ -385,14 +387,16 @@ module Sequel
           :typ => (doc['type'] || ''),
           :doc => (Rufus::Json.encode(doc) || ''),
           :wfid => (extract_wfid(doc) || ''),
-          :participant_name => (doc['participant_name'] || '')
+          :participant_name => (doc['participant_name'] || ''),
+          :owner => doc['owner'] || nil,
         }, {
           :ide => :$ide,
           :rev => :$rev,
           :typ => :$typ,
           :doc => :$doc,
           :wfid => :$wfid,
-          :participant_name => :$participant_name
+          :participant_name => :$participant_name,
+          :owner => :$owner
         })
     end
 
