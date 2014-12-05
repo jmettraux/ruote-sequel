@@ -102,7 +102,6 @@ module Sequel
 
       Ruote::Sequel.create_table(@sequel, false, @table)
 
-      debugger; 1
       replace_engine_configuration(options)
     end
 
