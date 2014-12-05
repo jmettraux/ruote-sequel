@@ -52,12 +52,14 @@ module Sequel
       String :wfid, :size => 255
       String :participant_name, :size => 512
       Integer :owner
+      DateTime :owned_until
+      String :task
 
       primary_key [ :typ, :ide, :rev ]
 
       index :wfid
       index :owner
-      #index [ :typ, :wfid ]
+      index [ :typ, :wfid, :owner, :owned_until, :task ]
     end
   end
 
@@ -389,6 +391,8 @@ module Sequel
           :wfid => (extract_wfid(doc) || ''),
           :participant_name => (doc['participant_name'] || ''),
           :owner => doc['owner'] || nil,
+          :owned_until => doc['owned_until'] || nil,
+          :task => extract_task_name(doc)
         }, {
           :ide => :$ide,
           :rev => :$rev,
@@ -396,8 +400,15 @@ module Sequel
           :doc => :$doc,
           :wfid => :$wfid,
           :participant_name => :$participant_name,
-          :owner => :$owner
+          :owner => :$owner,
+          :owned_until => :$owned_until,
+          :task => :$task
         })
+    end
+
+    def extract_task_name(doc)
+
+      doc['fields']['params']['task'] || ''
     end
 
     def extract_wfid(doc)
