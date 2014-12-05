@@ -51,14 +51,12 @@ module Sequel
       String :doc, :text => true, :null => false
       String :wfid, :size => 255
       String :participant_name, :size => 512
-      Integer :owner
-      DateTime :owned_until
-      String :task
+      Integer :owner, :null => true
+      DateTime :owned_until, :null => true
+      String :task, :size => 20, :null => true
 
       primary_key [ :typ, :ide, :rev ]
 
-      index :wfid
-      index :owner
       index [ :typ, :wfid, :owner, :owned_until, :task ]
     end
   end
@@ -104,6 +102,7 @@ module Sequel
 
       Ruote::Sequel.create_table(@sequel, false, @table)
 
+      debugger; 1
       replace_engine_configuration(options)
     end
 
@@ -390,9 +389,9 @@ module Sequel
           :doc => (Rufus::Json.encode(doc) || ''),
           :wfid => (extract_wfid(doc) || ''),
           :participant_name => (doc['participant_name'] || ''),
-          :owner => doc['owner'] || nil,
-          :owned_until => doc['owned_until'] || nil,
-          :task => extract_task_name(doc)
+          :owner => (doc['owner'] || ''),
+          :owned_until => (doc['owned_until'] || ''),
+          :task => (extract_task_name(doc) || '')
         }, {
           :ide => :$ide,
           :rev => :$rev,
@@ -406,9 +405,15 @@ module Sequel
         })
     end
 
+    def try_get(doc, *paths)
+      paths.inject(doc) do |val, path|
+        val.nil? ? nil : val[path]
+      end
+    end
+
     def extract_task_name(doc)
 
-      doc['fields']['params']['task'] || ''
+      try_get(doc, 'fields', 'params', 'task')
     end
 
     def extract_wfid(doc)
