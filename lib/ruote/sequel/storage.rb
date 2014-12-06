@@ -388,9 +388,9 @@ module Sequel
           :doc => (Rufus::Json.encode(doc) || ''),
           :wfid => (extract_wfid(doc) || ''),
           :participant_name => (doc['participant_name'] || ''),
-          :owner => (doc['owner'] || ''),
-          :due_at => (doc['due_at'] || ''),
-          :task => (extract_task_name(doc) || '')
+          :owner => doc['owner'],
+          :due_at => extract_due_at(doc),
+          :task => extract_task_name(doc)
         }, {
           :ide => :$ide,
           :rev => :$rev,
@@ -408,6 +408,11 @@ module Sequel
       paths.inject(doc) do |val, path|
         val[path] if val.is_a? Hash
       end
+    end
+
+    def extract_due_at(doc)
+
+      try_get(doc, 'fields', 'due_at')
     end
 
     def extract_task_name(doc)
