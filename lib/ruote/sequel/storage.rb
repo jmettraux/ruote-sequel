@@ -411,8 +411,11 @@ module Sequel
     end
 
     def extract_due_at(doc)
-
-      try_get(doc, 'fields', 'due_at')
+      due_at = try_get(doc, 'fields', 'due_at')
+      if due_at
+        due_at = due_at.to_time.utc
+      end
+      due_at
     end
 
     def extract_task_name(doc)
