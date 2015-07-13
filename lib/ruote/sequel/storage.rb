@@ -51,11 +51,13 @@ module Sequel
       String :doc, :text => true, :null => false
       String :wfid, :size => 255
       String :participant_name, :size => 512
+      String :owner
+      DateTime :due_at
+      String :task, :size => 20
 
       primary_key [ :typ, :ide, :rev ]
 
-      index :wfid
-      #index [ :typ, :wfid ]
+      index [ :typ, :wfid, :owner, :due_at, :task ]
     end
   end
 
@@ -385,15 +387,40 @@ module Sequel
           :typ => (doc['type'] || ''),
           :doc => (Rufus::Json.encode(doc) || ''),
           :wfid => (extract_wfid(doc) || ''),
-          :participant_name => (doc['participant_name'] || '')
+          :participant_name => (doc['participant_name'] || ''),
+          :owner => doc['owner'],
+          :due_at => extract_due_at(doc),
+          :task => extract_task_name(doc)
         }, {
           :ide => :$ide,
           :rev => :$rev,
           :typ => :$typ,
           :doc => :$doc,
           :wfid => :$wfid,
-          :participant_name => :$participant_name
+          :participant_name => :$participant_name,
+          :owner => :$owner,
+          :due_at => :$due_at,
+          :task => :$task
         })
+    end
+
+    def try_get(doc, *paths)
+      paths.inject(doc) do |val, path|
+        val[path] if val.is_a? Hash
+      end
+    end
+
+    def extract_due_at(doc)
+      due_at = try_get(doc, 'fields', 'due_at')
+      if due_at
+        due_at = due_at.to_time.utc
+      end
+      due_at
+    end
+
+    def extract_task_name(doc)
+
+      try_get(doc, 'fields', 'params', 'task')
     end
 
     def extract_wfid(doc)
