@@ -51,7 +51,7 @@ module Sequel
       String :doc, :text => true, :null => false
       String :wfid, :size => 255
       String :participant_name, :size => 512
-      Timestamp :at
+      Timestamp :at, :null => true, :default => nil
       String :owner
       DateTime :due_at
       String :task, :size => 20
