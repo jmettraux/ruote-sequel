@@ -53,11 +53,12 @@ module Sequel
       String :participant_name, :size => 512
       String :owner
       DateTime :due_at
+      DateTime :at
       String :task, :size => 20
 
       primary_key [ :typ, :ide, :rev ]
 
-      index [ :typ, :wfid, :owner, :due_at, :task ]
+      index [ :typ, :wfid, :owner, :due_at, :task, :at ]
     end
   end
 
@@ -195,7 +196,6 @@ module Sequel
     end
 
     def get_many(type, key=nil, opts={})
-
       cached = cache_get_many(type, key, opts)
       return cached if cached
 
@@ -390,7 +390,8 @@ module Sequel
           :participant_name => (doc['participant_name'] || ''),
           :owner => doc['owner'],
           :due_at => extract_due_at(doc),
-          :task => extract_task_name(doc)
+          :task => extract_task_name(doc),
+          :at => extract_at(doc)
         }, {
           :ide => :$ide,
           :rev => :$rev,
@@ -400,7 +401,8 @@ module Sequel
           :participant_name => :$participant_name,
           :owner => :$owner,
           :due_at => :$due_at,
-          :task => :$task
+          :task => :$task,
+          :at => :$at
         })
     end
 
@@ -416,6 +418,10 @@ module Sequel
         due_at = due_at.to_time.utc
       end
       due_at
+    end
+
+    def extract_at(doc)
+      try_get(doc, 'at')
     end
 
     def extract_task_name(doc)
@@ -454,9 +460,10 @@ module Sequel
     #
     # in order to cut down the number of selects, do one select with
     # all the information the worker needs for one step of work
-    #++
+    #
 
-    CACHED_TYPES = %w[ msgs schedules configurations variables ]
+    CACHED_TYPES = %w[ msgs configurations schedules variables ]
+    NON_SCHEDULES = %w[ msgs configurations variables ]
 
     # One select to grab in all the info necessary for a worker step
     # (expressions excepted).
@@ -465,13 +472,7 @@ module Sequel
 
       CACHED_TYPES.each { |t| cache[t] = {} }
 
-      @sequel[@table].select(
-        :ide, :typ, :doc
-      ).where(
-        :typ => CACHED_TYPES
-      ).order(
-        ::Sequel.asc(:ide), ::Sequel.desc(:rev)
-      ).each do |d|
+      @sequel[@table].select(:ide).where('(typ IN ?) OR (at < ?)', NON_SCHEDULES, Time.now).each do |d|
         (cache[d[:typ]] ||= {})[d[:ide]] ||= decode_doc(d)
       end
 
