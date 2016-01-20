@@ -471,7 +471,7 @@ module Sequel
     # all the information the worker needs for one step of work
     #
 
-    CACHED_TYPES = %w[ msgs configurations schedules variables ]
+    CACHED_TYPES = %w[ msgs schedules configurations variables ]
     NON_SCHEDULES = %w[ msgs configurations variables ]
 
     # One select to grab in all the info necessary for a worker step
@@ -481,7 +481,14 @@ module Sequel
 
       CACHED_TYPES.each { |t| cache[t] = {} }
 
-      @sequel[@table].select(:ide).where('(typ IN ?) OR (at < ?)', NON_SCHEDULES, Time.now).each do |d|
+
+      @sequel[@table].select(
+        :ide, :typ, :doc
+      ).where(
+        :typ => CACHED_TYPES
+      ).order(
+        ::Sequel.asc(:ide), ::Sequel.desc(:rev)
+      ).each do |d|
         (cache[d[:typ]] ||= {})[d[:ide]] ||= decode_doc(d)
       end
 
