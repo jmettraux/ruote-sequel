@@ -51,11 +51,17 @@ module Sequel
       String :doc, :text => true, :null => false
       String :wfid, :size => 255
       String :participant_name, :size => 512
+      Timestamp :at, :null => true, :default => nil
+      String :owner
+      DateTime :due_at
+      DateTime :at
+      String :task, :size => 20
 
       primary_key [ :typ, :ide, :rev ]
 
-      index :wfid
-      #index [ :typ, :wfid ]
+      index [ :typ, :wfid, :owner, :due_at, :task ]
+      index [ :typ, :at ]
+      index [ :at ]
     end
   end
 
@@ -193,7 +199,6 @@ module Sequel
     end
 
     def get_many(type, key=nil, opts={})
-
       cached = cache_get_many(type, key, opts)
       return cached if cached
 
@@ -385,15 +390,52 @@ module Sequel
           :typ => (doc['type'] || ''),
           :doc => (Rufus::Json.encode(doc) || ''),
           :wfid => (extract_wfid(doc) || ''),
-          :participant_name => (doc['participant_name'] || '')
+          :participant_name => (doc['participant_name'] || ''),
+          :at => extract_at(doc),
+          :owner => doc['owner'],
+          :due_at => extract_due_at(doc),
+          :task => extract_task_name(doc),
+          :at => extract_at(doc)
         }, {
           :ide => :$ide,
           :rev => :$rev,
           :typ => :$typ,
           :doc => :$doc,
           :wfid => :$wfid,
-          :participant_name => :$participant_name
+          :participant_name => :$participant_name,
+          :at => :$at,
+          :owner => :$owner,
+          :due_at => :$due_at,
+          :task => :$task,
+          :at => :$at
         })
+    end
+
+    def try_get(doc, *paths)
+      paths.inject(doc) do |val, path|
+        val[path] if val.is_a? Hash
+      end
+    end
+
+    def extract_due_at(doc)
+      due_at = try_get(doc, 'fields', 'due_at')
+      if due_at
+        due_at = due_at.to_time.utc
+      end
+      due_at
+    end
+
+    def extract_at(doc)
+      at = try_get(doc, 'at')
+      if at
+        at = at.to_time.utc
+      end
+      at
+    end
+
+    def extract_task_name(doc)
+
+      try_get(doc, 'fields', 'params', 'task')
     end
 
     def extract_wfid(doc)
@@ -427,9 +469,10 @@ module Sequel
     #
     # in order to cut down the number of selects, do one select with
     # all the information the worker needs for one step of work
-    #++
+    #
 
     CACHED_TYPES = %w[ msgs schedules configurations variables ]
+    NON_SCHEDULES = %w[ msgs configurations variables ]
 
     # One select to grab in all the info necessary for a worker step
     # (expressions excepted).
@@ -437,6 +480,7 @@ module Sequel
     def prepare_cache
 
       CACHED_TYPES.each { |t| cache[t] = {} }
+
 
       @sequel[@table].select(
         :ide, :typ, :doc
