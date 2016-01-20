@@ -51,6 +51,7 @@ module Sequel
       String :doc, :text => true, :null => false
       String :wfid, :size => 255
       String :participant_name, :size => 512
+      Timestamp :at, :null => true, :default => nil
       String :owner
       DateTime :due_at
       DateTime :at
@@ -58,7 +59,9 @@ module Sequel
 
       primary_key [ :typ, :ide, :rev ]
 
-      index [ :typ, :wfid, :owner, :due_at, :task, :at ]
+      index [ :typ, :wfid, :owner, :due_at, :task ]
+      index [ :typ, :at ]
+      index [ :at ]
     end
   end
 
@@ -388,6 +391,7 @@ module Sequel
           :doc => (Rufus::Json.encode(doc) || ''),
           :wfid => (extract_wfid(doc) || ''),
           :participant_name => (doc['participant_name'] || ''),
+          :at => extract_at(doc),
           :owner => doc['owner'],
           :due_at => extract_due_at(doc),
           :task => extract_task_name(doc),
@@ -399,6 +403,7 @@ module Sequel
           :doc => :$doc,
           :wfid => :$wfid,
           :participant_name => :$participant_name,
+          :at => :$at,
           :owner => :$owner,
           :due_at => :$due_at,
           :task => :$task,
@@ -421,7 +426,11 @@ module Sequel
     end
 
     def extract_at(doc)
-      try_get(doc, 'at')
+      at = try_get(doc, 'at')
+      if at
+        at = at.to_time.utc
+      end
+      at
     end
 
     def extract_task_name(doc)
